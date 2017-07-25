@@ -4,10 +4,11 @@ const spawn = require('child_process').spawn
 process.env.NODE_ENV = process.env.NODE_ENV || 'development'
 const options = {
   env: process.env,
-  stdio: 'inherit',
+//  stdio: 'inherit',
   shell: true
 }
 const muon = spawn('electron', [`"${path.join(__dirname, '..')}"`].concat(process.argv.slice(2)), options)
+muon.stdout.pipe(process.stdout)
 
 muon.on('error', (err) => {
   console.error(`could not start muon ${err}`)

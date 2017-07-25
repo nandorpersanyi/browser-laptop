@@ -201,6 +201,7 @@ const newFrame = (state, frameOpts) => {
 }
 
 const frameTabIdChanged = (state, action) => {
+  console.log('frameTabIdChanged!----1')
   action = makeImmutable(action)
   const oldTabId = action.get('oldTabId')
   const newTabId = action.get('newTabId')
@@ -215,6 +216,8 @@ const frameTabIdChanged = (state, action) => {
   state = frameStateUtil.deleteTabInternalIndex(state, oldTabId)
   state = frameStateUtil.updateFramesInternalIndex(state, index, false)
   state = frameStateUtil.moveFrame(state, newTabId, index)
+  console.log('frameTabIdChanged!----2')
+
   return state
 }
 
