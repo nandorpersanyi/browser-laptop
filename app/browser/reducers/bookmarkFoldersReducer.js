@@ -61,9 +61,15 @@ const bookmarkFoldersReducer = (state, action, immutableAction) => {
       }
     case appConstants.APP_MOVE_BOOKMARK_FOLDER:
       {
+        const key = action.get('folderKey')
+
+        if (key == null) {
+          break
+        }
+
         state = bookmarkFoldersState.moveFolder(
           state,
-          action.get('folderKey'),
+          key,
           action.get('destinationKey'),
           action.get('append'),
           action.get('moveIntoParent')
@@ -77,7 +83,13 @@ const bookmarkFoldersReducer = (state, action, immutableAction) => {
       }
     case appConstants.APP_REMOVE_BOOKMARK_FOLDER:
       {
-        state = bookmarkFoldersState.removeFolder(state, action.get('folderKey'))
+        const key = action.get('folderKey')
+
+        if (key == null) {
+          break
+        }
+
+        state = bookmarkFoldersState.removeFolder(state, key)
         break
       }
   }
