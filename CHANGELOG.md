@@ -5,6 +5,8 @@
  - Added Chromium spell checker. ([#9880](https://github.com/brave/browser-laptop/issues/9880))
  - Added an option to disable "Top Sites" in autocomplete. ([#4977](https://github.com/brave/browser-laptop/issues/4977))
  - Added "Hide Lower" button on Brave Payments. ([#9137](https://github.com/brave/browser-laptop/issues/9137))
+ - Optimized sending messages only to needed windows instead of all windows. ([#9701](https://github.com/brave/browser-laptop/issues/9701))
+ - Fixed showing the URL in the location bar for invalid URLs (instead of about:error). ([#2025](https://github.com/brave/browser-laptop/issues/2025)) 
  - Fixed opening a context menu freezes video (ex: Youtube). ([#5470](https://github.com/brave/browser-laptop/issues/5470))
  - Fixed LastPass won't stop asking for 2FA code. ([#9259](https://github.com/brave/browser-laptop/issues/9259))
  - Fixed Session restore can lead to lost windows if there is a hung or slow Window on shutdown. ([#9806](https://github.com/brave/browser-laptop/issues/9806))
@@ -26,7 +28,7 @@
  - Fixed adding a bookmarks folder makes the browser unresponsive in Sync. ([#9745](https://github.com/brave/browser-laptop/issues/9745))
  - Fixed bookmark deletion may lead to duplicated bookmarks in Sync. ([#9724](https://github.com/brave/browser-laptop/issues/9724))
  - Fixed blank tabs bar when increasing the number of tabs per tab set. ([#7806](https://github.com/brave/browser-laptop/issues/7806))
- - Updated to Chromium 60. ([#9947](https://github.com/brave/browser-laptop/issues/9947))
+ - Updated to Chromium 60.0.3112.78. ([#9947](https://github.com/brave/browser-laptop/issues/9947))
  - Updated Extension: 1Password 4.6.7.90. ([#9946](https://github.com/brave/browser-laptop/issues/9946))
  - Updated to Muon 4.3.6. ([#9856](https://github.com/brave/browser-laptop/issues/9856))
 
