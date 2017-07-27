@@ -20,12 +20,13 @@ const syncConstants = require('../js/constants/syncConstants')
 const appDispatcher = require('../js/dispatcher/appDispatcher')
 const AppStore = require('../js/stores/appStore')
 const syncUtil = require('../js/state/syncUtil')
+const {SITE_STATE_KEYS} = require('../js/state/siteUtil')
 const syncPendState = require('./common/state/syncPendState')
 const getSetting = require('../js/settings').getSetting
 const settings = require('../js/constants/settings')
 const extensions = require('./extensions')
 const {unescapeJSONPointer} = require('./common/lib/jsonUtil')
-const bookmarkFoldersState = require('./common/state/bookmarkFoldersState')
+const bookmarkFoldersUtil = require('./common/lib/bookmarkFoldersUtil')
 const bookmarksState = require('./common/state/bookmarksState')
 
 const CATEGORY_MAP = syncUtil.CATEGORY_MAP
@@ -68,13 +69,13 @@ const appStoreChangeCallback = function (diffs) {
     }
     const path = diff.path.split('/')
     if (path.length < 3) {
-      // We are looking for paths like ['', 'sites', 'https://brave.com/', 'title']
+      // We are looking for paths like ['', 'bookmarks', 'https://brave.com/', 'title']
       return
     }
 
     const type = path[1]
     const field = path[3]
-    const isSite = type === 'sites'
+    const isSite = SITE_STATE_KEYS.includes(type)
 
     const fieldsToPick = SYNC_FIELDS[type]
     if (!fieldsToPick) {
@@ -120,7 +121,7 @@ const appStoreChangeCallback = function (diffs) {
         entryJS.objectId = entryJS.objectId || syncUtil.newObjectId(statePath)
 
         sendSyncRecords(backgroundSender, action,
-          [type === 'sites' ? syncUtil.createSiteData(entryJS) : syncUtil.createSiteSettingsData(statePath[1], entryJS)])
+          [isSite ? syncUtil.createSiteData(entryJS) : syncUtil.createSiteSettingsData(statePath[1], entryJS)])
       }
     }
   })
@@ -261,8 +262,6 @@ module.exports.onSyncReady = (isFirstRun, e) => {
     sendSyncRecords(e.sender, writeActions.CREATE, [deviceRecord])
     deviceIdSent = true
   }
-  const bookmarks = bookmarksState.getBookmarks(appState)
-  const bookmarkFolders = bookmarkFoldersState.getFolders(appState)
   const seed = appState.get('seed') || new Immutable.List()
 
   /**
@@ -284,18 +283,20 @@ module.exports.onSyncReady = (isFirstRun, e) => {
       return false
     }
 
+    // If this this exists, then we must have synced it; see below:
+    //   folderToObjectId[folderId] = record.objectId
     return !folderToObjectId[bookmark.get('folderId')]
   }
 
-  const syncBookmark = (bookmark) => {
+  const syncBookmark = (bookmark, appState) => {
     const bookmarkJS = bookmark.toJS()
 
     const parentFolderId = bookmark.get('parentFolderId')
     if (typeof parentFolderId === 'number') {
       if (!folderToObjectId[parentFolderId]) {
-        const folderResult = bookmarkFolders.get(parentFolderId)
+        const folderResult = appState.getIn(['bookmarkFolders', parentFolderId])
         if (folderResult) {
-          syncBookmark(folderResult[1])
+          syncBookmark(folderResult[1], appState)
         }
       }
       bookmarkJS.parentFolderObjectId = folderToObjectId[parentFolderId]
@@ -311,16 +312,21 @@ module.exports.onSyncReady = (isFirstRun, e) => {
   }
 
   // Sync bookmarks that have not been synced yet.
-  bookmarks.forEach((bookmark) => {
-    if (shouldSyncBookmark(bookmark) !== true) {
-      return
+  const syncBookmarkFolder = (parentFolderId, appState) => {
+    const bookmarks = bookmarksState.getBookmarksWithFolders(appState, parentFolderId)
+    for (let bookmark of bookmarks) {
+      if (shouldSyncBookmark(bookmark) === true) {
+        syncBookmark(bookmark, appState)
+      }
+      if (bookmarkFoldersUtil.isFolder(bookmark)) {
+        syncBookmarkFolder(bookmark.get('folderId'), appState)
+      }
     }
-
-    syncBookmark(bookmark)
-  })
-
-  // TODO add bookamrkFolder sync as well
-
+  }
+  // Sync bookmarks starting from the top level.
+  syncBookmarkFolder(0, appState)
+  // Other bookmarks
+  syncBookmarkFolder(-1, appState)
   sendSyncRecords(e.sender, writeActions.CREATE, bookmarksToSync)
 
   // Sync site settings that have not been synced yet
